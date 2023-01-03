@@ -21,12 +21,12 @@ def utc_str_to_timestamp(utc: str) -> int:
 class SyncFolder(Core):
 
     def __init__(self, *kargs):
-        self.hash_map_file = os.path.join(aligo_config_folder, "_hashmap")
+        self.hash_map_file = os.path.join(aligo_config_folder, "hashmap")
         self.hash_map = {}
         if os.path.exists(self.hash_map_file):
-            file = open(self.hash_map_file, "rb")
-            pickle.load(file)
-            file.close()
+            i_file = open(self.hash_map_file, "rb")
+            self.hash_map=pickle.load(i_file)
+            i_file.close()
         super().__init__(*kargs)
 
     """sync folder
@@ -370,8 +370,10 @@ class SyncFolder(Core):
     def _core_sha1(self, param):
         print(param, aligo_config_folder)
         file_stats = os.stat(param)
-        key = "{} found _{}".format(param, file_stats.st_size)
-        if key in self.hash_map:
+        print(param, file_stats.st_size)
+        key = "{}_{}".format(param, file_stats.st_size)
+        print(param, key,len(self.hash_map.keys()))
+        if key in self.hash_map.keys():
             self._auth.log.info("{}{}".format(key, self.hash_map[key]))
             return self.hash_map[key]
         """计算文件sha1"""
@@ -384,6 +386,8 @@ class SyncFolder(Core):
                 sha1.update(data)
         sha1sum = sha1.hexdigest()
         self.hash_map[key] = sha1sum
-        self._auth.log.info("{}addede {}".format(key, sha1sum))
-        pickle.dump(self.hash_map, open(self.hash_map_file, "wb"))
+        self._auth.log.info("{} added {},size:{}".format(key, sha1sum,len(self.hash_map)))
+        o_file=open(self.hash_map_file, "wb")
+        pickle.dump(self.hash_map,o_file)
+        o_file.close()
         return sha1sum
