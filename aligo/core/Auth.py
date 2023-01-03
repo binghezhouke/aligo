@@ -20,10 +20,12 @@ import requests
 from aligo.core.Config import *
 from aligo.types import *
 from aligo.types.Enum import *
-from .EMail import send_email
 from .LoginServer import LoginServer
 
-aligo_config_folder = Path.home().joinpath('.aligo')
+if "ALIGO_CONF_DIR" in os.environ:
+    aligo_config_folder = Path(os.environ["ALIGO_CONF_DIR"])
+else:
+    aligo_config_folder = Path.home().joinpath('.aligo')
 aligo_config_folder.mkdir(parents=True, exist_ok=True)
 
 
@@ -57,7 +59,8 @@ class Auth:
     def debug_log(self, response: requests.Response):
         """打印错误日志, 便于分析调试"""
         r = response.request
-        self.log.warning(f'[method status_code] {r.method} {response.status_code}')
+        self.log.warning(
+            f'[method status_code] {r.method} {response.status_code}')
         self.log.warning(f'[url] {response.url}')
         self.log.warning(f'[response body] {response.text[:200]}')
 
@@ -185,7 +188,8 @@ class Auth:
 
         if self._name.exists():
             self.log.info(f'加载配置文件 {self._name}')
-            self.token = DataClass.fill_attrs(Token, json.load(self._name.open(encoding='utf8')))
+            self.token = DataClass.fill_attrs(
+                Token, json.load(self._name.open(encoding='utf8')))
         else:
             self.log.info('登录方式 扫描二维码')
             self._login()
@@ -234,7 +238,7 @@ class Auth:
                 self.log.info(f'请访问 http://<YOUR_IP>:{self._port} 扫描二维码')
                 _thread.start_new_thread(self._show_qrcode_in_web, (qr_link,))
             if self._email:
-                self._send_email(qr_link)
+                raise Exception("bad auth emthod")
         else:
             qrcode_png = self._show(qr_link)
             if qrcode_png:
@@ -259,7 +263,8 @@ class Auth:
                 self.log.info(f'已确认 可关闭二维码窗口')
                 if self._port:
                     try:
-                        self.session.get(f'http://localhost:{self._port}/close')
+                        self.session.get(
+                            f'http://localhost:{self._port}/close')
                     except requests.exceptions.ConnectionError:
                         pass
                 return response
